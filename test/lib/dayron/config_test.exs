@@ -5,18 +5,18 @@ defmodule Dayron.ConfigTest do
   defmodule MyAdapter do
   end
 
-  defmodule MyLogger do    
+  defmodule MyLogger do
   end
 
 
   setup do
-    Application.put_env(:dayron_test, Dayron.Repo, 
+    Application.put_env(:dayron_test, Dayron.Repo,
       url: "http://api.example.com",
       headers: [access_token: "token"]
     )
   end
 
-  test "parses a valid config" do    
+  test "parses a valid config" do
     {otp_app, adapter, logger} = Config.parse(Dayron.Repo, otp_app: :dayron_test, adapter: Dayron.ConfigTest.MyAdapter, logger: Dayron.ConfigTest.MyLogger)
     assert otp_app == :dayron_test
     assert adapter == Dayron.ConfigTest.MyAdapter
@@ -41,7 +41,7 @@ defmodule Dayron.ConfigTest do
     assert_raise ArgumentError, msg, fn ->
       Config.get(Dayron.Repo, :invalid_app)
     end
-  end  
+  end
 
   test "raises an exception if url is missing in config" do
     Application.put_env(:dayron_test, Dayron.Repo, [])
@@ -83,5 +83,13 @@ defmodule Dayron.ConfigTest do
     config = Config.get(Dayron.Repo, :dayron_test)
     url = Config.get_request_url(config, MyModel, id: 1)
     assert url == "http://stage-api.example.com/resources/1"
+  end
+
+  test "accepts headers to be set with options" do
+    Application.put_env(:dayron_test, Dayron.Repo, [url: "http://api.example.com", headers: ["host": "primary-host"]])
+    config = Config.get(Dayron.Repo, :dayron_test)
+    opts = [options: [headers: [access_token: "another-token", refresh_token: "token"]]]
+    {headers, options} = Config.get_request_headers(config, opts)
+    assert headers == [host: "primary-host", access_token: "another-token", refresh_token: "token"]
   end
 end

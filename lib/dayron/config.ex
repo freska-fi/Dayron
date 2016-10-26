@@ -45,15 +45,25 @@ defmodule Dayron.Config do
   end
 
   @doc """
+  Merges headers set in config and in options.
+  """
+  def get_request_headers(config, opts \\ []) do
+    config_headers = Keyword.get(config, :headers, [])
+    {option_headers, options} = Keyword.pop(opts[:options], :headers, [])
+    {Keyword.merge(config_headers, option_headers), options}
+  end
+
+  @doc """
   Returns a `%Dayron.Request` with provided data and application config
   """
   def init_request_data(config, method, model, opts \\ []) do
+    {headers, options} = get_request_headers(config, opts)
     %Dayron.Request{
       method: method,
       url: get_request_url(config, model, opts),
       body: opts[:body],
-      headers: Keyword.get(config, :headers, []),
-      options: opts[:options]
+      headers: headers,
+      options: options
     }
   end
 
